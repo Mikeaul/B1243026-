@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logic Gate Interactive Master | 數位邏輯互動實驗室</title>
+    <style>
+        :root {
+            --bg-color: #0f1016;
+            --panel-bg: #181a26;
+            --card-bg: #222536;
+            --accent-cyan: #00ffcc;
+            --accent-blue: #38bdf8;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #2e324a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                linear-gradient(rgba(46, 50, 74, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(46, 50, 74, 0.15) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--accent-cyan);
+            color: #0f1016;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .tab-content.active {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 側邊欄與面板 */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .panel h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--accent-blue);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .gate-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .gate-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .gate-btn:hover, .gate-btn.active {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        /* 實驗台工作區 */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .circuit-stage {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 互動開關與元件 */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .switch-box {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .switch-box.active {
+            border-color: var(--accent-green);
+            background: rgba(0, 230, 118, 0.1);
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+        }
+
+        .switch-box .status {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 0.25rem;
+        }
+
+        /* 邏輯閘顯示器 */
+        .gate-display-box {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+        }
+
+        .gate-display-box h2 {
+            font-size: 2rem;
+            color: var(--accent-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .formula {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* 輸出燈泡 */
+        .output-bulb {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #2a2e43;
+            border: 3px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .output-bulb.on {
+            background: var(--accent-green);
+            border-color: #fff;
+            box-shadow: 0 0 30px var(--accent-green), inset 0 0 10px #fff;
+            color: #0f1016;
+        }
+
+        /* 真值表 */
+        .truth-table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--card-bg);
+            color: var(--accent-blue);
+        }
+
+        tr.highlight {
+            background: rgba(0, 255, 204, 0.15);
+            font-weight: bold;
+            color: var(--accent-cyan);
+        }
+
+        .explanation {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            background: var(--card-bg);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        /* 測驗區樣式 */
+        #quiz-tab.active {
+            display: block;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .quiz-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .quiz-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quiz-btn:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 255, 204, 0.1);
+        }
+
+        .quiz-feedback {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ 數位邏輯閘互動實驗室</h1>
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('learn')">實驗學習區</button>
+            <button class="tab-btn" onclick="switchTab('quiz')">挑戰測驗區</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- 實驗學習區 -->
+        <div id="learn-tab" class="tab-content active">
+            <!-- 左側：選擇邏輯閘 -->
+            <div class="panel">
+                <h3>選擇邏輯閘 (Gate)</h3>
+                <div class="gate-list" id="gate-list">
+                    <!-- 動態生成按鈕 -->
+                </div>
+            </div>
+
+            <!-- 右側：工作區與真值表 -->
+            <div class="workspace">
+                <div class="circuit-stage">
+                    <!-- 輸入 A -->
+                    <div class="control-group">
+                        <span>輸入 A</span>
+                        <div class="switch-box" id="switch-a" onclick="toggleInput('A')">
+                            <div>切換</div>
+                            <div class="status" id="val-a">0</div>
+                        </div>
+                    </div>
+
+                    <!-- 輸入 B (部分閘需要) -->
+                    <div class="control-group" id="group-b">
+                        <span>輸入 B</span>
+                        <div class="switch-box" id="switch-b" onclick="toggleInput('B')">
+                            <div>切換</div>
+                            <div class="status" id="val-b">0</div>
+                        </div>
+                    </div>
+
+                    <!-- 邏輯閘本體 -->
+                    <div class="gate-display-box">
+                        <h2 id="current-gate-title">AND</h2>
+                        <div class="formula" id="current-formula">Y = A · B</div>
+                    </div>
+
+                    <!-- 輸出結果燈泡 -->
+                    <div class="control-group">
+                        <span>輸出 Y</span>
+                        <div class="output-bulb" id="output-bulb">
+                            <span id="val-output">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 真值表與說明 -->
+                <div class="panel">
+                    <h3>動態真值表 (Truth Table)</h3>
+                    <div class="truth-table-container">
+                        <table id="truth-table">
+                            <!-- 動態生成真值表 -->
+                        </table>
+                    </div>
+                    <div class="explanation" id="gate-explanation">
+                        兩個輸入皆為 1 時，輸出才為 1。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 挑戰測驗區 -->
+        <div id="quiz-tab" class="tab-content">
+            <div class="quiz-card">
+                <h3 id="quiz-question-title" style="color: var(--accent-cyan); margin-bottom: 1rem;">載入中...</h3>
+                <p id="quiz-question-desc" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 1.5rem;"></p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="submitQuiz(0)">輸出 = 0 (OFF)</button>
+                    <button class="quiz-btn" onclick="submitQuiz(1)">輸出 = 1 (ON)</button>
+                </div>
+                <div class="quiz-feedback" id="quiz-feedback"></div>
+                <button class="tab-btn" style="margin-top: 2rem; width: 100%;" onclick="nextQuizQuestion()">下一題</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 邏輯閘資料定義
+        const gates = {
+            AND: {
+                inputs: 2,
+                formula: "Y = A · B",
+                desc: "「及閘」：只有當輸入 A 與 B 皆為 1 時，輸出才會是 1。",
+                calc: (a, b) => (a && b ? 1 : 0)
+            },
+            OR: {
+                inputs: 2,
+                formula: "Y = A + B",
+                desc: "「或閘」：只要輸入 A 或 B 其中一個（或皆為）1，輸出即為 1。",
+                calc: (a, b) => (a || b ? 1 : 0)
+            },
+            NOT: {
+                inputs: 1,
+                formula: "Y = ¬A",
+                desc: "「非閘」：將輸入反相，0 變成 1，1 變成 0。",
+                calc: (a, b) => (a === 0 ? 1 : 0)
+            },
+            NAND: {
+                inputs: 2,
+                formula: "Y = ¬(A · B)",
+                desc: "「反及閘」：AND 閘的反相，兩者皆為 1 時輸出 0，其餘為 1。",
+                calc: (a, b) => (!(a && b) ? 1 : 0)
+            },
+            NOR: {
+                inputs: 2,
+                formula: "Y = ¬(A + B)",
+                desc: "「反或閘」：OR 閘的反相，兩者皆為 0 時輸出 1，其餘為 0。",
+                calc: (a, b) => (!(a || b) ? 1 : 0)
+            },
+            XOR: {
+                inputs: 2,
+                formula: "Y = A ⊕ B",
+                desc: "「互斥或閘」：兩輸入相異時輸出 1，相同時輸出 0。",
+                calc: (a, b) => (a !== b ? 1 : 0)
+            },
+            XNOR: {
+                inputs: 2,
+                formula: "Y = A ⊙ B",
+                desc: "「同向閘」：兩輸入相同時輸出 1，相異時輸出 0。",
+                calc: (a, b) => (a === b ? 1 : 0)
+            }
+        };
+
+        let currentGateKey = 'AND';
+        let inputA = 0;
+        let inputB = 0;
+
+        // 初始化
+        function initApp() {
+            const listEl = document.getElementById('gate-list');
+            listEl.innerHTML = '';
+            Object.keys(gates).forEach(key => {
+                const btn = document.createElement('button');
+                btn.className = `gate-btn ${key === currentGateKey ? 'active' : ''}`;
+                btn.textContent = `${key} 閘`;
+                btn.onclick = () => selectGate(key);
+                listEl.appendChild(btn);
+            });
+            updateWorkspace();
+            initQuiz();
+        }
+
+        // 切換邏輯閘
+        function selectGate(key) {
+            currentGateKey = key;
+            document.querySelectorAll('.gate-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(key));
+            });
+            
+            // 處理單/雙輸入介面顯示
+            const groupB = document.getElementById('group-b');
+            if (gates[key].inputs === 1) {
+                groupB.style.display = 'none';
+            } else {
+                groupB.style.display = 'flex';
+            }
+            updateWorkspace();
+        }
+
+        // 點擊切換開關
+        function toggleInput(target) {
+            if (target === 'A') {
+                inputA = inputA === 0 ? 1 : 0;
+            } else {
+                inputB = inputB === 0 ? 1 : 0;
+            }
+            updateWorkspace();
+        }
+
+        // 更新實驗台介面與真值表高亮
+        function updateWorkspace() {
+            const gate = gates[currentGateKey];
+            
+            // 更新開關顯示
+            document.getElementById('val-a').textContent = inputA;
+            document.getElementById('switch-a').classList.toggle('active', inputA === 1);
+            
+            document.getElementById('val-b').textContent = inputB;
+            document.getElementById('switch-b').classList.toggle('active', inputB === 1);
+
+            // 計算輸出
+            const output = gate.calc(inputA, inputB);
+            
+            // 更新閘名與公式
+            document.getElementById('current-gate-title').textContent = currentGateKey;
+            document.getElementById('current-formula').textContent = gate.formula;
+            document.getElementById('gate-explanation').textContent = gate.desc;
+
+            // 更新燈泡
+            const bulb = document.getElementById('output-bulb');
+            const valOutput = document.getElementById('val-output');
+            valOutput.textContent = output;
+            bulb.classList.toggle('on', output === 1);
+
+            // 繪製真值表
+            renderTruthTable(gate);
+        }
+
+        // 繪製真值表
+        function renderTruthTable(gate) {
+            const table = document.getElementById('truth-table');
+            let html = '';
+
+            if (gate.inputs === 1) {
+                html += `<tr><th>A</th><th>Y (${currentGateKey})</th></tr>`;
+                [0, 1].forEach(a => {
+                    const out = gate.calc(a, 0);
+                    const isHighlight = (a === inputA);
+                    html += `<tr class="${isHighlight ? 'highlight' : ''}"><td>${a}</td><td>${out}</td></tr>`;
+                });
+            } else {
+                html += `<tr><th>A</th><th>B</th><th>Y (${currentGateKey})</th></tr>`;
+                const combos = [[0,0], [0,1], [1,0], [1,1]];
+                combos.forEach(([a, b]) => {
+                    const out = gate.calc(a, b);
+                    const isHighlight = (a === inputA && b === inputB);
+                    html += `<tr class="${isHighlight ? 'highlight' : ''}"><td>${a}</td><td>${b}</td><td>${out}</td></tr>`;
+                });
+            }
+            table.innerHTML = html;
+        }
+
+        // 分頁切換
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'learn') {
+                document.getElementById('learn-tab').classList.add('active');
+                event.target.classList.add('active');
+            } else {
+                document.getElementById('quiz-tab').classList.add('active');
+                event.target.classList.add('active');
+                nextQuizQuestion();
+            }
+        }
+
+        // 測驗系統邏輯
+        let currentQuiz = {};
+
+        function initQuiz() {
+            nextQuizQuestion();
+        }
+
+        function nextQuizQuestion() {
+            const gateKeys = Object.keys(gates);
+            const randomGateKey = gateKeys[Math.floor(Math.random() * gateKeys.length)];
+            const gate = gates[randomGateKey];
+
+            const a = Math.round(Math.random());
+            const b = gate.inputs === 1 ? 0 : Math.round(Math.random());
+            const correctAns = gate.calc(a, b);
+
+            currentQuiz = { ans: correctAns };
+
+            document.getElementById('quiz-question-title').textContent = `挑戰測驗：${randomGateKey} 閘`;
+            document.getElementById('quiz-question-desc').textContent = gate.inputs === 1 
+                ? `當輸入 A = ${a} 時，請問 ${randomGateKey} 閘的輸出 Y 是多少？` 
+                : `當輸入 A = ${a}, B = ${b} 時，請問 ${randomGateKey} 閘的輸出 Y 是多少？`;
+            
+            document.getElementById('quiz-feedback').textContent = '';
+        }
+
+        function submitQuiz(userChoice) {
+            const feedback = document.getElementById('quiz-feedback');
+            if (userChoice === currentQuiz.ans) {
+                feedback.style.color = 'var(--accent-green)';
+                feedback.textContent = '🎉 答對了！太棒了！';
+            } else {
+                feedback.style.color = 'var(--accent-red)';
+                feedback.textContent = '❌ 答錯囉！再想想看真值表的運算規則。';
+            }
+        }
+
+        // 啟動應用
+        window.onload = initApp;
+    </script>
+</body>
+</html>
